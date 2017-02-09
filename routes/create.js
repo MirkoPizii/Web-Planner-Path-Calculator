@@ -5,10 +5,11 @@ var debug = require('debug')('ppc:server');
 var async = require("async");
 var Tree = require("../models/tree");
 var Nodo = require("../models/node");
+var fs = require('fs');
 
 var router = express.Router();
 
-var ancestors = [], nodes = [], index = 0, node = {}, inserted = 0;
+var ancestors = [], nodes = [], index = 0, node = {}, inserted = 0, canRun = true;
 
 //Connect to Mongoose
 mongoose.createConnection('mongodb://localhost:27017/ppc?socketTimeoutMS=60000000&connectTimeoutMS=60000000&poolSize=3&journal=false', {
@@ -68,6 +69,29 @@ router.get("/test", function(req, res) {
 router.post("/", function(req, res) {
   console.time("perf")
   console.time("perf2")
+  fs.writeFile('create_tree/' + Date.now() + ".txt", JSON.stringify(req.body), function(err) {
+    if (err) throw err;
+  })
+});
+
+setInterval(function() {
+  console.log('inizio check');
+  fs.readdir('create_tree', function(err, files) {
+    if (err) throw err;
+    if (canRun == true && files.length > 0) {
+      console.log('inserimento');
+      canRun = false;
+      var file_content = fs.readFileSync('create_tree/' + files[0]);
+      save_tree(file_content);
+      fs.unlink('create_tree/' + files[0]);
+      canRun = true;
+      console.log('inserito');
+    }
+  });
+}, 18000);
+
+function save_tree(json_data) {
+  req = JSON.parse(json_data)
   ancestors = [];
   index = 0;
   node = {};
@@ -76,59 +100,59 @@ router.post("/", function(req, res) {
 
   //NEW TREE
   var t = {
-    "name": req.body.nameTree,
-    "splitSize": req.body.splitSize,
-    "depthSize": req.body.depthSize,
-    "total": req.body.total,
+    "name": req.nameTree,
+    "splitSize": req.splitSize,
+    "depthSize": req.depthSize,
+    "total": req.total,
     "creation": new Date(),
     "lastOperation": null
   };
 
 
   var vertecesAttributeList = [], edgesAttributeList = [];
-  var isIntegerV = JSON.parse(req.body['isIntegerV[]']);
-  var isIntegerE = JSON.parse(req.body['isIntegerE[]']);
+  var isIntegerV = JSON.parse(req['isIntegerV[]']);
+  var isIntegerE = JSON.parse(req['isIntegerE[]']);
   //ATTRIBUTES FOR NODES
-  if (typeof req.body['vertexAttrName[]'] === 'string') {
-    req.body['vertexAttrName[]'] = [req.body['vertexAttrName[]']];
+  if (typeof req['vertexAttrName[]'] === 'string') {
+    req['vertexAttrName[]'] = [req['vertexAttrName[]']];
   }
-  if (typeof req.body['nValueVertex[]'] === 'string') {
-    req.body['nValueVertex[]'] = [req.body['nValueVertex[]']];
+  if (typeof req['nValueVertex[]'] === 'string') {
+    req['nValueVertex[]'] = [req['nValueVertex[]']];
   }
-  if (typeof req.body['kValueVertex[]'] === 'string') {
-    req.body['kValueVertex[]'] = [req.body['kValueVertex[]']];
+  if (typeof req['kValueVertex[]'] === 'string') {
+    req['kValueVertex[]'] = [req['kValueVertex[]']];
   }
-  for (var i = 0, len = req.body['vertexAttrName[]'].length; i < len; i++) {
+  for (var i = 0, len = req['vertexAttrName[]'].length; i < len; i++) {
     var temp = {};
-    temp.name = req.body['vertexAttrName[]'][i];
+    temp.name = req['vertexAttrName[]'][i];
     temp.ref = "Node";
     //per il momento la funzione di generazione valori è statica
     //temp.ref = req.body.vertexGenerationRule[i];
-    temp.k = req.body['kValueVertex[]'][i];
-    temp.n = req.body['nValueVertex[]'][i];
+    temp.k = req['kValueVertex[]'][i];
+    temp.n = req['nValueVertex[]'][i];
     temp.isInteger = isIntegerV[i];
     vertecesAttributeList.push(temp);
 
   }
 
   //ATTRIBUTES FOR EDGES
-  if (typeof req.body['edgeAttrName[]'] === 'string') {
-    req.body['edgeAttrName[]'] = [req.body['edgeAttrName[]']];
+  if (typeof req['edgeAttrName[]'] === 'string') {
+    req['edgeAttrName[]'] = [req['edgeAttrName[]']];
   }
-  if (typeof req.body['kValueEdge[]'] === 'string') {
-    req.body['kValueEdge[]'] = [req.body['kValueEdge[]']];
+  if (typeof req['kValueEdge[]'] === 'string') {
+    req['kValueEdge[]'] = [req['kValueEdge[]']];
   }
-  if (typeof req.body['nValueEdge[]'] === 'string') {
-    req.body['nValueEdge[]'] = [req.body['nValueEdge[]']];
+  if (typeof req['nValueEdge[]'] === 'string') {
+    req['nValueEdge[]'] = [req['nValueEdge[]']];
   }
-  for (var i = 0, len = req.body['edgeAttrName[]'].length; i < len; i++) {
+  for (var i = 0, len = req['edgeAttrName[]'].length; i < len; i++) {
     var temp = {};
-    temp.name = req.body['edgeAttrName[]'][i];
+    temp.name = req['edgeAttrName[]'][i];
     temp.ref = "Edge";
     //per il momento la funzione di generazione valori è statica
     //temp.ref = req.body.vertexGenerationRule[i];
-    temp.k = parseFloat(req.body['kValueEdge[]'][i]);
-    temp.n = parseFloat(req.body['nValueEdge[]'][i]);
+    temp.k = parseFloat(req['kValueEdge[]'][i]);
+    temp.n = parseFloat(req['nValueEdge[]'][i]);
     temp.isInteger = isIntegerE[i];
     edgesAttributeList.push(temp);
 
@@ -142,7 +166,7 @@ router.post("/", function(req, res) {
     }
     //console.log(data)
     t.id = data._id;
-    res.json(t);
+    //res.json(t);
 
     //CREATE NODES
     console.log("building tree...")
@@ -152,8 +176,7 @@ router.post("/", function(req, res) {
 
 
   //res.json("ok");
-});
-
+}
 
 //BUILDTREE FUNCTION
 var buildTree = function buildTreeRecursive(key, albero, split, depth, k, vatt, eatt) {
