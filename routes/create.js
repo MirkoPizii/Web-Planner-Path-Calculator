@@ -75,17 +75,14 @@ router.post("/", function(req, res) {
 });
 
 setInterval(function() {
-  console.log('inizio check');
   fs.readdir('create_tree', function(err, files) {
     if (err) throw err;
     if (canRun == true && files.length > 0) {
-      console.log('inserimento');
       canRun = false;
       var file_content = fs.readFileSync('create_tree/' + files[0]);
       save_tree(file_content);
       fs.unlink('create_tree/' + files[0]);
       canRun = true;
-      console.log('inserito');
     }
   });
 }, 18000);
