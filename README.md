@@ -30,7 +30,7 @@ Modificare il file **nginx.conf** nella directory di installazione di nginx ed i
 ```bash
 include vhosts.d/*.conf;
 ```
-*Nota: Se la piattaforma deve eseguirsi su www.nomesito.com al posto di www.nomesito.com:81, cambiare all'interno del fine **nginx.conf**  la riga **listen 80** in **listen 81**.*
+Nota: Se la piattaforma deve eseguirsi su www.nomesito.com al posto di www.nomesito.com:81, cambiare all'interno del fine **nginx.conf** la riga **listen 80** in **listen 81**.
 
 Una volta fatto ciò, se non esiste, creare la cartella **vhosts.d** e all'interno creare un nuovo file **hwp.conf**:
 ```bash
@@ -85,7 +85,7 @@ Modificare il file **/etc/nginx/nginx.conf** ed inserire all'interno della sezio
 ```bash
 include vhosts.d/*.conf;
 ```
-*Nota: Se la piattaforma deve eseguirsi su www.nomesito.com al posto di www.nomesito.com:81, cambiare all'interno del fine **nginx.conf**  la riga **listen 80** in **listen 81**.*
+Nota: Se la piattaforma deve eseguirsi su www.nomesito.com al posto di www.nomesito.com:81, cambiare all'interno del fine **nginx.conf**  la riga **listen 80** in **listen 81**.
 
 Una volta fatto ciò, se non esiste, creare la cartella **vhosts.d** e all'interno creare un nuovo file **hwp.conf**:
 ```bash
