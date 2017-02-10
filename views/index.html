@@ -352,12 +352,10 @@
     })
 
     //SUBMIT BUILD TREE
-    $("body").on("click", "#buildTreeButton", function(e) {
+    $("body").on("submit", "#createTreeForm", function(e) {
       e.preventDefault();
-      e.stopPropagation()
-      $(this).addClass("disabled")
-
-      //VALIDATION FORM HERE
+      e.stopPropagation();
+      $(this).addClass("disabled");
 
       //IF VALIDATION IS OK THEN
 
