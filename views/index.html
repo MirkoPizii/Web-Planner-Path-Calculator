@@ -389,8 +389,8 @@
         //data: form.serialize().replace(/%5B%5D/g, '[]'),
         success: function(data) {
           //LOAD CREATING TEMPLATE
-          //content.html(Mustache.render(creatingTemplate, data))
-          //currentView="creating";
+          content.html(Mustache.render(creatingTemplate, data))
+          currentView="creating";
         },
         error: function(err) {
           console.log("Ops! Something went wrong. Try Again!")
