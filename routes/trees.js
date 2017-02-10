@@ -5,6 +5,7 @@ var app = express();
 var router = express.Router();
 
 var Tree = require("../models/tree");
+var Node = require("../models/node")
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({"extended": false}));
@@ -38,6 +39,16 @@ router.get("/:id", function(req, res) {
     }
     res.json(tree)
   })
+});
+
+router.delete("/", function(req, res) {
+  Tree.find({
+    _id: req.body['id_tree']
+  }).remove().exec();
+  Node.find({
+    tree_id: req.body['id_tree']
+  }).remove().exec();
+  res.json('Done!')
 });
 
 /* GET users listing. 

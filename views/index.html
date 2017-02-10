@@ -182,7 +182,8 @@
         destinationNodesSelect = $("#destinationNodesSelect");
         calculatePathButton = $("#calculatePathButton");
         sourceNodeLevel = $("#sourceNodeLevel");
-        deleteButton.data("id", data._id)
+//        deleteButton.data("id", data._id)
+        deleteButton.attr('data-id', data._id)
         modal.modal('show');
       });
 
@@ -419,6 +420,27 @@
 
       Ntotal.text(totale);
       totalInput.val(totale);
+    })
+
+    $("body").on('click', '#deleteTreeButton', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var confirm_sel = confirm('Are you sure to delete?')
+      if (confirm_sel) {
+        var id_to_delete = $(this).attr('data-id')
+        $.ajax({
+          type: 'DELETE',
+          url: '/trees',
+          data: {'id_tree': id_to_delete},
+          success: function(data) {
+            alert('Tree deleted!');
+            window.location.reload();
+          },
+          error: function(err) {
+            console.log("Ops! Something went wrong. Try Again!")
+          }
+        })
+      }
     })
 
 

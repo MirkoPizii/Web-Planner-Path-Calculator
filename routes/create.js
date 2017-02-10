@@ -67,8 +67,6 @@ router.get("/test", function(req, res) {
   //simulateInsert();
 })
 router.post("/", function(req, res) {
-  console.time("perf")
-  console.time("perf2")
   fs.writeFile('create_tree/' + Date.now() + ".txt", JSON.stringify(req.body), function(err) {
     if (err) throw err;
   })
@@ -93,6 +91,8 @@ setInterval(function() {
 
 function save_tree(json_data) {
   req = JSON.parse(json_data)
+  console.time("perf")
+  console.time("perf2")
   ancestors = [];
   index = 0;
   node = {};
@@ -174,7 +174,6 @@ function save_tree(json_data) {
     buildTree(0, t, t.splitSize, t.depthSize, 0, setAttributesValues(t.vertecesAttributeList), setAttributesValues(t.edgesAttributeList));
 
   })
-
 
   //res.json("ok");
 }
