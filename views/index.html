@@ -395,6 +395,10 @@
         }
       })
       $(this).removeClass("disabled")
+      var next_step = confirm("Click OK to return homepage. CANCEL to remain here without deleting values")
+      if (next_step) {
+        window.location.reload()
+      }
     });
 
 
