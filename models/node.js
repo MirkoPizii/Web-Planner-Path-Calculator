@@ -65,3 +65,10 @@ module.exports.getNodeByName = function(query, callback) {
 module.exports.getNodeById = function(id, callback) {
   Node.findById(id, callback)
 }
+
+// DELETE NODES BY TREE
+module.exports.deleteNodesByTree = function(id, callback) {
+  Node.find({
+    tree_id: req.body['id_tree']
+  }).remove().exec();
+}
