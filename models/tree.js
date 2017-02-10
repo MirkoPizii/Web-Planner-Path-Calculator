@@ -45,5 +45,12 @@ module.exports.getTreeById = function(id, callback) {
   Tree.findById(id, callback)
 }
 
+// DELETE TREE BY ID
+module.exports.deleteTreeById = function(id, callback) {
+  Tree.find({
+    _id: id
+  }).remove().exec();
+}
+
 
 
