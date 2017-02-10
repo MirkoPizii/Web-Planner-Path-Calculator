@@ -5,7 +5,7 @@ var app = express();
 var router = express.Router();
 
 var Tree = require("../models/tree");
-var Node = require("../models/node")
+var Nodo = require("../models/node")
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({"extended": false}));
@@ -42,12 +42,8 @@ router.get("/:id", function(req, res) {
 });
 
 router.delete("/", function(req, res) {
-  Tree.find({
-    _id: req.body['id_tree']
-  }).remove().exec();
-  Node.find({
-    tree_id: req.body['id_tree']
-  }).remove().exec();
+  Tree.deleteTreeById(req.body['id_tree']);
+  Nodo.deleteNodesByTree(req.body['id_tree']);
   res.json('Done!')
 });
 
