@@ -161,6 +161,7 @@
     //GET TREES
     var getTrees = function(page, limit) {
       $.get("/trees", {page: page, limit: limit}, function(data) {
+        data.trees = data.trees.reverse()
         console.log(data)
         treesBox.html(Mustache.render(treeRowTemplate, data))
         pageValue = data.page;
