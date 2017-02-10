@@ -58,6 +58,7 @@ cd <directory_project>
 npm install --save
 node --max_old_space_size=4096 bin/www 
 ```
+*Nota: se possibile, è preferibile aumentare il valore 4096 ad un valore più alto.*
 
 ### Aprire il browser all'indirizzo specificato.
 
@@ -117,6 +118,7 @@ cd <directory_project>
 npm install --save
 node --max_old_space_size=4096 bin/www 
 ```
+*Nota: se possibile, è preferibile aumentare il valore 4096 ad un valore più alto.*
 
 ### Aprire il browser all'indirizzo specificato.
 
