@@ -76,13 +76,17 @@ router.post("/", function(req, res) {
 
 setInterval(function() {
   fs.readdir('create_tree', function(err, files) {
-    if (err) throw err;
+    if (err) throw console.log('Errore: ' + err);
     if (canRun == true && files.length > 0) {
       canRun = false;
-      var file_content = fs.readFileSync('create_tree/' + files[0]);
-      save_tree(file_content);
-      fs.unlink('create_tree/' + files[0]);
-      canRun = true;
+      try {
+        var file_content = fs.readFileSync('create_tree/' + files[0]);
+        save_tree(file_content);
+        fs.unlink('create_tree/' + files[0]);
+        canRun = true;
+      } catch(err) {
+        console.log('Errore: ' + err)
+      }
     }
   });
 }, 18000);
