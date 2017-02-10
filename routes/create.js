@@ -9,7 +9,7 @@ var fs = require('fs');
 
 var router = express.Router();
 
-var ancestors = [], nodes = [], index = 0, node = {}, inserted = 0, canRun = true;
+var ancestors = [], nodes = [], index = 0, node = {}, inserted = 0, canRun = true, performance = 0;
 
 //Connect to Mongoose
 mongoose.createConnection('mongodb://localhost:27017/ppc?socketTimeoutMS=60000000&connectTimeoutMS=60000000&poolSize=3&journal=false', {
@@ -93,6 +93,7 @@ function save_tree(json_data) {
   req = JSON.parse(json_data)
   console.time("perf")
   console.time("perf2")
+  performance = Date.now()
   ancestors = [];
   index = 0;
   node = {};
@@ -222,6 +223,10 @@ var buildTree = function buildTreeRecursive(key, albero, split, depth, k, vatt, 
         inserted++;
         console.log("last: " + inserted)
         console.timeEnd("perf2")
+        var perf = Date.now() - performance;
+        Tree.update({_id: albero.id}, {$set: {creation_time: perf}}, function() {
+          console.log("attributo albero creation_time aggiornato")
+        });
       })
 
     }

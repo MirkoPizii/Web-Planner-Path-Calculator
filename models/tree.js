@@ -15,7 +15,7 @@ var treeSchema = new Schema({
     type: Date,
     default: Date.now
   },
-  lastOperation: Date
+  creation_time: String
 });
 
 // create model if not exists.
