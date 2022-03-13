@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Planner Path Calculator</title>
+
+    <!-- Bootstrap -->
+    <link href="/stylesheets/bootstrap.min.css" rel="stylesheet">
+
+    <link href="/stylesheets/style.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">Micron Technology Inc.</a>
+      </div>
+
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+        <ul class="nav navbar-nav">
+        </ul> 
+        
+        <ul class="nav navbar-nav navbar-right">
+        <li><a href="#">Home <span class="sr-only">(current)</span></a></li>
+          <li><a href="#" class="createTreeButton">Create <span class="sr-only">(current)</span></a></li>
+          <li><a href="#" class="retrieveTreeButton">Retrieve <span class="sr-only">(current)</span></a></li>
+          <li><a>2017</a></li>
+        </ul>
+      </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+    </nav>
+
+    <div class="jumbotron" style="padding-top: 90px;">
+      <div class="container">
+        <h1>Web Planner Path Calculator</h1>
+        <p>The Planner Path Calculator is a sub-system of the Global Planning System that is used to store and extract planning data modeled as a graph.
+A graph is used to model different manufacturing processes, for example a Tree can be used to model the process of making a product as the result of the assembly of multiple components.</p>
+        <a class="btn btn-success btn-lg createTreeButton" href="#">Create Tree</a><a class="btn btn-primary btn-lg retrieveTreeButton" href="#">Retrieve Tree</a>
+      </div>
+    </div>
+
+    <div id="alert-box"></div>
+
+    <div id="content"></div>
+    <hr class="empty">
+    <hr class="empty">
+    <!-- Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Tree Details</h4>
+          </div>
+          <div class="modal-body" id="modalBody"><!-- DYNAMIC DATA --></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" id="deleteTreeButton" class="btn btn-danger pull-left" data-dismiss="modal">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="/javascripts/jquery-3.1.1.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="/javascripts/bootstrap.min.js"></script>
+    <script src="/javascripts/mustache.min.js"></script>
+    <script>
+      $(document).ready(function(){
+        var content = $("#content");
+        var deleteButton = $("#deleteTreeButton")
+        var modal = $("#myModal"), modalContent = $("#modalBody");
+        var createButton = $(".createTreeButton"), retrieveButton = $(".retrieveTreeButton")
+        var attributeTemplate, createTemplate, retrieveTemplate, treeRowTemplate, modalTemplate, resultTemplate, creatingTemplate;
+        var currentView = "Home";
+        var form, treesBox, pageValue, pageItem, limit = 50;
+        //FOR CREATE PAGE
+        var Ntotal, totalInput, splitInput, depthInput, destinationNodesSelect, calculatePathButton, sourceNodeLevel;
+
+        //LOAD TEMPLATE
+        $.get("/templates/attributeRow.html", function(t){
+          attributeTemplate = t;
+        });
+        $.get("/templates/treeRow.html", function(t){
+          treeRowTemplate = t;
+        });
+        $.get("/templates/create.html", function(t){
+          createTemplate = t;
+        });
+        $.get("/templates/retrieve.html", function(t){
+          retrieveTemplate = t;
+        });
+        $.get("/templates/modal.html", function(t){
+          modalTemplate = t;
+        });
+        $.get("/templates/result.html", function(t){
+          resultTemplate = t;
+        });
+        $.get("/templates/creating.html", function(t){
+          creatingTemplate = t;
+        });
+
+        //LOAD CREATE TREE PAGE
+        $(".createTreeButton").click(function(e){
+          e.preventDefault();
+          if(currentView=="create"){
+            return false;
+          }
+          content.html(Mustache.render(createTemplate, {}))
+          currentView="create";
+          Ntotal = $("#totalNodes")
+          totalInput = $("#totalInput");
+          splitInput = $("#splitSize")
+          depthInput = $("#depthSize")
+          form = $("#createTreeForm");
+        })
+
+        //LOAD RETRIEVE TREE PAGE
+        $(".retrieveTreeButton").click(function(e){
+          e.preventDefault();
+          e.stopPropagation();
+          pageValue = 1;
+          var count;
+          $.get("/trees/count", function(data){
+            count = data;
+            content.html(Mustache.render(retrieveTemplate, {limit: limit, count: count}))
+            currentView="retrieve";
+            treesBox = $("#treesBox");
+            getTrees(pageValue, limit)
+
+          });
+          
+        })
+
+        $("body").on("click", ".refreshTreesButton", function(e){
+          getTrees(1, limit)
+        })
+
+        //GET TREES
+        var getTrees = function(page, limit){
+          $.get("/trees", {page: page, limit: limit}, function(data){
+            console.log(data)
+            treesBox.html(Mustache.render(treeRowTemplate, data))
+            pageValue = data.page;
+          });
+        }
+
+
+        //GET TREE AND OPEN MODAL
+        $("body").on("click", ".showTree", function(e){
+          e.preventDefault();
+          e.stopPropagation();
+          if($(this).data("tree-ready") == 0){
+            return false;
+          }
+          var id = $(this).data("tree-id")
+          $.get("/trees/" + id, function(data){
+            //total0 is the max seq_number
+            data.total0 = data.total-1;
+            //TREE is a global variable
+            TREE = data;
+            modalContent.html(Mustache.render(modalTemplate, data))
+            destinationNodesSelect = $("#destinationNodesSelect");
+            calculatePathButton = $("#calculatePathButton");
+            sourceNodeLevel = $("#sourceNodeLevel");
+            deleteButton.data("id", data._id)
+            modal.modal('show');
+          });
+            
+        });
+
+        //GET NODE
+        $("body").on("submit", "#SelectNodeForm", function(e){
+          e.preventDefault();
+          e.stopPropagation();
+          
+          var treeid = $("#tree-id-input").val();
+          var seq_number = $("#selected-node-number").val()
+          $.get("/nodes/search/sequence", {num: seq_number, tree: treeid}, function(data){
+            //NODO is a global variable
+            NODO = data;
+            var options = '';
+            $.each(data.ancestors, function(key, value){
+              options += '<option value="'+ value.seq_number +'">' + value.name + "  /  Level: " + value.level + '</option>';
+            })
+            destinationNodesSelect.html(options).focus()
+            calculatePathButton.removeClass("disabled")
+            sourceNodeLevel.text(" / Level: " + data.level)
+          });  
+        });
+
+
+
+        //CALCULATE PATH AND LOAD RESULT PAGE
+        $("body").on("click", "#calculatePathButton", function(e){
+            e.preventDefault()
+            e.stopPropagation();
+            console.time("performance")
+            var startPerformance = window.performance.now();
+            var dest = destinationNodesSelect.val();
+            //CALCULATE FUNCTION
+            var results = {
+              source: NODO,
+              tree: TREE,
+              nodes: [],
+              destination: dest,
+              iftype: function() {
+                return function( text, render ) {
+                  if( render( text ) == 'Node' ) {
+                    return '<span class="label label-success">' + render( text ) + '</span>';
+                  }
+                  else {
+                    return '<span class="label label-danger">' + render( text ) + '</span>';
+                  }
+                }
+              }
+            }
+            //create object to save sum for each attribute, initializing it with current node's attributes values
+            var attributes = {};
+            $.each(NODO.attributes, function(k, attribute){
+              var name = "Vertex_" + attribute.name
+              var a = {
+                name: attribute.name,
+                sum: parseFloat(attribute.value),
+                type: "Node"
+              }
+              attributes[name] = a;
+            })
+            $.each(NODO.edge.attributes, function(k, attribute){
+              var name = "Edge_" + attribute.name
+              var a = {
+                name: attribute.name,
+                sum: parseFloat(attribute.value),
+                type: "Edge"
+              }
+              attributes[name] = a;
+            })
+
+            //iterate each anchestor to sum attributes' values
+            $.each(NODO.ancestors, function(k, node){
+              //vertece attributes
+              console.log(attributes)
+              $.each(node.attributes, function(k, attribute){
+                var name = "Vertex_" + attribute.name
+                attributes[name].sum += parseFloat(attribute.value);
+              })
+
+
+              //this operation is used to check if the current node is the destination node
+              // and to prepare the verteces to show in result page
+              if(node.seq_number == results.destination){
+                results.destinationNode = node;
+                return false;
+              }else{
+                //if is not destination node, sum egdes nodes too
+                $.each(node.edge.attributes, function(k, attribute){
+                  var name = "Edge_" + attribute.name
+                  attributes[name].sum += parseFloat(attribute.value);
+                })
+                results.nodes.push(node)
+              }
+            })
+
+            console.timeEnd("performance")
+            var endPerformance = window.performance.now();
+            results.performance = endPerformance - startPerformance;
+            //prepare rendering data for mustach
+            var arrayAttributes = $.map(attributes, function(value, index) {
+              return [value];
+            });
+            results.attributes = arrayAttributes;
+            results.total = results.nodes.length + 2;
+            modal.modal("hide");
+            //NODO is a global variable
+            console.log(results)
+            content.html(Mustache.render(resultTemplate, results))
+            currentView="result";
+        })
+
+        //ADD VERTEX ATTRIBUTE
+        $("body").on("click", "#addAttrVert", function(e){
+            e.stopPropagation();
+            var list = $(".input-validation-vertex")
+            var validation = true;
+              list.each(function(){
+                if($(this).val() == ""){
+                  $(this).addClass("input-error")
+                  validation = false;
+                  return false;
+                }
+              })
+            if(validation){
+              var VertexAttributeListBox = $("#VertexAttributeListBox")
+              //mustache oprations
+              var toRender = {
+                type: "vertex",
+                type2: "Vertex",
+                t: "V"
+              }
+              var rendered = Mustache.render(attributeTemplate, toRender);
+              VertexAttributeListBox.append(rendered)
+              
+            }else{
+              return false;
+            }
+          });
+
+        //ADD EDGE ATTRIBUTE
+        $("body").on("click", "#addAttrEdge", function(e){
+          e.stopPropagation();
+            var list = $(".input-validation-edge")
+            var validation = true;
+              list.each(function(){
+                if($(this).val() == ""){
+                  $(this).addClass("input-error")
+                  validation = false;
+                  return false;
+                }
+              })
+            if(validation){
+              var EdgeAttributeListBox = $("#EdgeAttributeListBox");
+              //mustache oprations
+              var toRender = {
+                type: "edge",
+                type2: "Edge",
+                t: "E"
+              }
+              var rendered = Mustache.render(attributeTemplate, toRender);
+              EdgeAttributeListBox.append(rendered)
+              
+            }else{
+              return false;
+            }
+          });
+
+        //REMOVE ERROR
+        $("body").on("focus", "input.input-error", function(){
+          $(this).removeClass("input-error");
+        })
+
+        //SUBMIT BUILD TREE
+        $("body").on("click", "#buildTreeButton", function(e){
+          e.preventDefault();
+          e.stopPropagation()
+          $(this).addClass("disabled")
+
+          //VALIDATION FORM HERE
+
+          //IF VALIDATION IS OK THEN
+
+          //prepare checkbox array
+          var vCheckBox = [];
+          var eCheckBox = [];
+          //debugger;
+          $(".vertex-checkbox").each(function(){
+            if($(this).is(":checked")){
+              vCheckBox.push(1);
+            }else{
+              vCheckBox.push(0);
+            }
+          })
+          $(".edge-checkbox").each(function(){
+            if($(this).is(":checked")){
+              eCheckBox.push(1);
+            }else{
+              eCheckBox.push(0);
+            }
+          })
+          $("#checkbox0").val(JSON.stringify(vCheckBox));
+          $("#checkbox1").val(JSON.stringify(eCheckBox));
+
+          $.ajax({
+            type: "POST",
+            url: "/create",
+            data: form.serialize(),
+            //data: form.serialize().replace(/%5B%5D/g, '[]'),
+            success: function(data){
+              //LOAD CREATING TEMPLATE
+              //console.log(data)
+              content.html(Mustache.render(creatingTemplate, data))
+              currentView="creating";
+            },
+            error: function(err){
+              console.log("Ops! Something went wrong. Try Again!") 
+            }
+          })
+          $(this).removeClass("disabled")
+        });
+
+
+        //WEB SOCKET TO NOTIFY WHEN TREE IS READY
+        //<div class="alert alert-success" role="alert">...</div>
+        //<div class="alert alert-info" role="alert">...</div>
+        //<div class="alert alert-warning" role="alert">...</div>
+        //<div class="alert alert-danger" role="alert">...</div>
+
+
+
+        //CALCULATE TOTAL NODES
+        $("body").on("change", "#splitSize, #depthSize", function(){
+            var s = splitInput.val();
+            var d = depthInput.val();
+            d++;
+            var potenza = Math.pow(s, d)
+            var totale =  (potenza - 1)/(s-1);
+
+            Ntotal.text(totale);
+            totalInput.val(totale);
+        }) 
+
+
+
+
+      })
+    </script>
+  </body>
+</html>

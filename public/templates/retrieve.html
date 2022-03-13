@@ -1,0 +1,37 @@
+<div class="container">
+    <ol class="breadcrumb">
+      <li><a href="#">Home</a></li>
+      <li><a href="#">Retrieve Tree</a></li>
+    </ol>
+</div>
+<div class="container">
+    <h1>Retrieve Tree</h1>
+    <h4>Retrieve from the database a Tree previously stored.</h4>
+    <hr class="empty">
+    <span class="btn btn-success refreshTreesButton"">Refresh</span>
+    <hr class="empty">
+    <table class="table table-stripped table-hover table-inverse">
+       <thead>
+        <tr>
+         <th>Tree Name</th>
+         <th>Id</th>
+         <th class="text-center">Split Size</th>
+         <th class="text-center">Depth</th>
+         <th class="text-center">Nodes</th>
+         <th>Creation Time</th>
+         <th>Creation</th>
+       <tr>
+       </thead>
+       <tbody id="treesBox">
+       
+       </tbody>
+      </table>
+      <hr>
+      <nav aria-label="...">
+      <ul class="pager">
+        <li class="previous disabled"><a href="#"><span aria-hidden="true">&larr;</span></a></li>
+        <li><strong class="text-primary">{{count}}</strong> results</li>
+        <li class="next disabled"><a href="#"><span aria-hidden="true">&rarr;</span></a></li>
+      </ul>
+    </nav>
+</div>
